@@ -111,8 +111,6 @@ def scanPotentialCollisions():
     for ball1, ball2 in itertools.combinations(balls, 2):
         ball1.collisionWithBall(ball2)
 
-    
-
 
 
 screen_size = screen_width, screen_height = 600, 400
