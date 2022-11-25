@@ -10,7 +10,7 @@ red = 255, 0, 0
 green = 0,255,0
 blue = 0,0,255
 
-initial_velocity = 50
+initial_velocity = 70
 
 MAX_VELOCITY = 1000
 
@@ -23,7 +23,7 @@ class Border:
         self.top = top
         self.width = width
         self.height = height
-        self.rectangle = pygame.Rect(left,top,width,height)
+        self.rectangle = pygame.Rect(left, top, width, height)
     
     def display(self):
         pygame.draw.rect(screen, self.color, self.rectangle,width = 1)
@@ -81,12 +81,25 @@ class Ball:
         self.change_velocity(v1_tangent + v1_normal)
         ball.change_velocity(v2_tangent + v2_normal)
 
-    def collisionWithBall(self, ball):
-        distance = (self.position - ball.position).magnitude()
-        if distance <= self.radius + ball.radius:
-            self.velocitiesAfterCollision(ball)
+    def distanceToOther(self, other):
+        posA = self.position + self.velocity*dtime_s
+        posB = other.position + other.velocity*dtime_s
+        distance = abs(posA - posB)
+        sumOfRadii = self.radius + other.radius
+        return distance - sumOfRadii
 
+    def collide(self, other):
+        collision_vector = self.position - other.position
+        collision_vector.normalize()
+        self.velocity = self.velocity.reflect(collision_vector)
+        other.velocity = other.velocity.reflect(collision_vector)
 
+    def collisionWithBall(self, other, collision_type='simple'):
+        if self.distanceToOther(other) <= 0:
+            if collision_type == 'elastic':
+                self.velocitiesAfterCollision(other)
+            else:
+                self.collide(other)
 
 
 def get_random_position(size):
@@ -107,10 +120,6 @@ def update_random_ball_velocity():
     new_velocity = get_random_velocity()
     ball.change_velocity(new_velocity)
 
-def scanPotentialCollisions():
-    for ball1, ball2 in itertools.combinations(balls, 2):
-        ball1.collisionWithBall(ball2)
-
 
 
 screen_size = screen_width, screen_height = 600, 400
@@ -127,7 +136,7 @@ pygame.display.set_caption("Snooker!")
 # Setting snooker table
 border  = Border()
 
-num_of_balls = 10
+num_of_balls = 5
 balls = []
 
 for i in range(num_of_balls):
@@ -151,9 +160,9 @@ while run:
 
     direction_tick += dtime_s
 
-    if direction_tick > 1:
-        direction_tick = 0
-        update_random_ball_velocity()
+    #if direction_tick > 1:
+    #    direction_tick = 0
+    #    update_random_ball_velocity()
 
 
 
@@ -168,11 +177,12 @@ while run:
     #border.display()
 
     # check for collision between balls
-    #scanPotentialCollisions()
 
-    for ball in balls:
-        ball.move()
-        ball.display()
+    for i, ball_1 in enumerate(balls):
+        ball_1.move()
+        for ball_2 in balls[i+1:]:
+            ball_1.collisionWithBall(ball_2)
+        ball_1.display()
 
     screen.unlock()
     # Display everything in the screen
