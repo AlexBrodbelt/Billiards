@@ -35,7 +35,7 @@ Y_BAULK_D = screen_height / 3
 initial_velocity = 70
 MAX_VELOCITY = 1000
 BALL_SIZE = SCALE*3
-GAP = BALL_SIZE / 5
+GAP = 1
 
 colors = [BLACK, RED, GREEN, BLUE]
 
@@ -142,14 +142,13 @@ balls = []
 """set up of starting position"""
 def set_up_background():
     screen.fill(BACKGROUND_GREEN)
-    
-    #Baulk Line
+    # Baulk Line
     pygame.draw.line(screen, WHITE, (X_BAULK_LINE, 0), (X_BAULK_LINE, screen_height))
-    #Baulk D
+    # Baulk D
     pygame.draw.arc(screen,WHITE,(X_BAULK_D, Y_BAULK_D, 2*R_BAULK_D, 2*R_BAULK_D), 1/2 * math.pi, 3/2 * math.pi)
     return
 
-def reset():
+def reset_poisitions():
     pass
 
 """BALL SETUP"""
@@ -195,7 +194,6 @@ while run:
     #border.display()
 
     # check for collision between balls
-
     for i, ball_1 in enumerate(balls):
         ball_1.move()
         for ball_2 in balls[i+1:]:
