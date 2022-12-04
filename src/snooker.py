@@ -62,7 +62,7 @@ class Ball:
 
     def move(self):
         self.position += self.velocity * dtime_s
-        self.collisionWithWall()
+        self.collision_with_wall()
 
     def change_velocity(self, velocity):
         self.velocity = velocity
@@ -71,14 +71,14 @@ class Ball:
         rx, ry = int(self.position.x), int(self.position.y)
         pygame.draw.circle(screen,self.color, (rx, ry), self.radius,self.width)
 
-    def collisionWithWall(self): # simple collision detection
+    def collision_with_wall(self): # simple collision detection
         if (self.position.x <= self.radius) or (self.position.x >= screen_width - self.radius):
             self.velocity.x = -self.velocity.x
 
         if (self.position.y <= self.radius) or (self.position.y >= screen_height - self.radius):
             self.velocity.y = -self.velocity.y
 
-    def velocitiesAfterCollision(self, ball):
+    def velocities_after_collision(self, ball):
         normal = self.velocity - ball.velocity
         normal.normalize()
         tangent = euclid.Vector2(-normal.y, normal.x)
@@ -104,7 +104,7 @@ class Ball:
         self.change_velocity(v1_tangent + v1_normal)
         ball.change_velocity(v2_tangent + v2_normal)
 
-    def distanceToOther(self, other):
+    def distance_to_other(self, other):
         posA = self.position + self.velocity*dtime_s
         posB = other.position + other.velocity*dtime_s
         distance = abs(posA - posB)
@@ -117,32 +117,12 @@ class Ball:
         self.velocity = self.velocity.reflect(collision_vector)
         other.velocity = other.velocity.reflect(collision_vector)
 
-    def collisionWithBall(self, other, collision_type='simple'):
-        if self.distanceToOther(other) <= 0:
+    def collision_with_ball(self, other, collision_type='simple'):
+        if self.distance_to_other(other) <= 0:
             if collision_type == 'elastic':
-                self.velocitiesAfterCollision(other)
+                self.velocities_after_collision(other)
             else:
                 self.collide(other)
-
-"""Intermediate step - generating random setup"""
-def get_random_position(size):
-    x = random.randint(size,screen_width-size)
-    y = random.randint(size,screen_height-size)
-    return euclid.Vector2(x,y)
-
-def get_random_velocity():
-    angle = random.uniform(0, 2*math.pi)
-    vx = math.cos(angle)
-    vy = math.sin(angle)
-    random_velocity = euclid.Vector2(vx, vy)
-    random_velocity *= initial_velocity
-    return random_velocity
-
-def update_random_ball_velocity():
-    ball = random.choice(balls)
-    new_velocity = get_random_velocity()
-    ball.change_velocity(new_velocity)
-
 
 
 # Setting screen size
@@ -160,7 +140,7 @@ pygame.display.set_caption("Snooker!")
 num_of_balls = 5
 balls = []
 """set up of starting position"""
-def setUpBackground():
+def set_up_background():
     screen.fill(BACKGROUND_GREEN)
     
     #Baulk Line
@@ -186,17 +166,6 @@ red_balls = [Ball(BALL_SIZE, RED, euclid.Vector2(x,y)) for x,y in get_red_ball_p
 balls = [green_ball, brown_ball, yellow_ball, blue_ball, black_ball, pink_ball, black_ball]
 balls.extend(red_balls)
 
-
-
-"""for i in range(num_of_balls):
-    color = random.choice(colors)
-    width = 1
-    size = random.randint(10,40)
-    position = get_random_position(size)
-    velocity = get_random_velocity()
-    ball = Ball(size,color,position,velocity)
-    balls.append(ball)"""
-
 direction_tick = 0
 
 # Defining variables for fps and running
@@ -221,7 +190,7 @@ while run:
     
     # Clear the screen
     screen.lock() # when locked the surface can be modified
-    setUpBackground()
+    set_up_background()
 
     #border.display()
 
@@ -230,7 +199,7 @@ while run:
     for i, ball_1 in enumerate(balls):
         ball_1.move()
         for ball_2 in balls[i+1:]:
-            ball_1.collisionWithBall(ball_2)
+            ball_1.collision_with_ball(ball_2)
         ball_1.display()
 
     screen.unlock()

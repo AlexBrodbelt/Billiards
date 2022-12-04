@@ -19,4 +19,3 @@ if __name__ == "__main__":
     screen_width = 360
     radius  = 5
     red_balls = get_red_ball_positions(screen_width, screen_height, radius, GAP)
-    print(red_balls)
