@@ -1,22 +1,28 @@
 import os, sys, math, pygame, pygame.mixer
 import random
 import euclid
-import itertools
 from pygame.locals import *
 
-black = 0,0,0
+pygame.init()
+
+black = 0, 0, 0
 white = 255, 255, 255
+yellow = 255, 174, 66
 red = 255, 0, 0
-green = 0,255,0
-blue = 0,0,255
+blue = 0, 0, 255
+green = 0, 255, 0
+pink = 255, 20, 147
+
+
 
 initial_velocity = 70
-
 MAX_VELOCITY = 1000
+BALL_SIZE = 10
+BACKGROUND_GREEN = 10, 108, 3
 
 colors = [black, red, green, blue]
 
-class Border:
+"""class Border:
     def __init__(self,left=100, top=50, width=236, height=137,color=black):
         self.color = color
         self.left = left
@@ -26,7 +32,7 @@ class Border:
         self.rectangle = pygame.Rect(left, top, width, height)
     
     def display(self):
-        pygame.draw.rect(screen, self.color, self.rectangle,width = 1)
+        pygame.draw.rect(screen, self.color, self.rectangle,width = 1)"""
 
 class Ball:
     def __init__(self, radius, color, width,position=euclid.Vector2(0,0), velocity=euclid.Vector2(0,0)):
@@ -101,7 +107,7 @@ class Ball:
             else:
                 self.collide(other)
 
-
+"""Intermediate step for generating random setup"""
 def get_random_position(size):
     x = random.randint(size,screen_width-size)
     y = random.randint(size,screen_height-size)
@@ -121,8 +127,10 @@ def update_random_ball_velocity():
     ball.change_velocity(new_velocity)
 
 
-
-screen_size = screen_width, screen_height = 600, 400
+scale = 2
+snooker_table_width = 360
+snooker_table_height = 180
+screen_size = screen_width, screen_height = scale*snooker_table_width, scale*snooker_table_height
 
 # Setting screen size
 screen = pygame.display.set_mode(screen_size)
@@ -134,10 +142,19 @@ clock = pygame.time.Clock()
 pygame.display.set_caption("Snooker!")
 
 # Setting snooker table
-border  = Border()
+"""border  = Border()"""
 
 num_of_balls = 5
 balls = []
+"""set up of starting position"""
+def setUpBackground():
+    screen.fill(BACKGROUND_GREEN)
+    pygame.draw.line(screen, white, (screen_width//5, 0), (screen_width//5, screen_height) )
+    return
+
+def setUp(reference_position):
+    pass
+
 
 for i in range(num_of_balls):
     color = random.choice(colors)
@@ -172,7 +189,7 @@ while run:
     
     # Clear the screen
     screen.lock() # when locked the surface can be modified
-    screen.fill(white)
+    setUpBackground()
 
     #border.display()
 
