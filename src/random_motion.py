@@ -5,36 +5,27 @@ from pygame.locals import *
 
 pygame.init()
 
-SCALE = 3
-SNOOKER_TABLE_WIDTH = 360
-SNOOKER_TABLE_HEIGHT = 180
-
-screen_size = screen_width, screen_height = SCALE*SNOOKER_TABLE_WIDTH, SCALE*SNOOKER_TABLE_HEIGHT
-
-BLACK = 0, 0, 0
-WHITE = 255, 255, 255
-YELLOW = 255, 174, 66
-RED = 255, 0, 0
-BLUE = 0, 0, 255
-GREEN = 0, 255, 0
-PINK = 255, 20, 147
-BROWN = 139, 69, 19
-BACKGROUND_GREEN = 10, 108, 3
-
-X_BAULK_LINE = screen_width / 5 # x coordinate for Baulk Line
-R_BAULK_D = screen_height / 6 # radius of Baulk D
-X_BAULK_D = X_BAULK_LINE - R_BAULK_D
-Y_BAULK_D = screen_height / 3
+black = 0, 0, 0
+white = 255, 255, 255
+yellow = 255, 174, 66
+red = 255, 0, 0
+blue = 0, 0, 255
+green = 0, 255, 0
+pink = 255, 20, 147
+bg_green = 10, 108, 3
 
 
+scale = 2
+snooker_table_width = 360
+snooker_table_height = 180
 initial_velocity = 70
 MAX_VELOCITY = 1000
 BALL_SIZE = 21
 
-colors = [BLACK, RED, GREEN, BLUE]
+colors = [black, red, green, blue]
 
 """class Border:
-    def __init__(self,left=100, top=50, width=236, height=137,color=BLACK):
+    def __init__(self,left=100, top=50, width=236, height=137,color=black):
         self.color = color
         self.left = left
         self.top = top
@@ -46,7 +37,7 @@ colors = [BLACK, RED, GREEN, BLUE]
         pygame.draw.rect(screen, self.color, self.rectangle,width = 1)"""
 
 class Ball:
-    def __init__(self, radius, color, position=euclid.Vector2(0,0), velocity=euclid.Vector2(0,0), width=1):
+    def __init__(self, radius, color, width,position=euclid.Vector2(0,0), velocity=euclid.Vector2(0,0)):
         self.position = position
         self.velocity = velocity
         self.radius = radius
@@ -138,6 +129,7 @@ def update_random_ball_velocity():
     ball.change_velocity(new_velocity)
 
 
+screen_size = screen_width, screen_height = scale*snooker_table_width, scale*snooker_table_height
 
 # Setting screen size
 screen = pygame.display.set_mode(screen_size)
@@ -155,23 +147,11 @@ num_of_balls = 5
 balls = []
 """set up of starting position"""
 def setUpBackground():
-    screen.fill(BACKGROUND_GREEN)
-    
-    #Baulk Line
-    pygame.draw.line(screen, WHITE, (X_BAULK_LINE, 0), (X_BAULK_LINE, screen_height))
-    #Baulk D
-    pygame.draw.arc(screen,WHITE,(X_BAULK_D, Y_BAULK_D, 2*R_BAULK_D, 2*R_BAULK_D), 1/2 * math.pi, 3/2 * math.pi)
+    screen.fill(white)
     return
 
-def setUpBalls():
-    green_ball  = Ball(BALL_SIZE, GREEN, euclid.Vector2( X_BAULK_D, Y_BAULK_D))
-    brown_ball  = Ball(BALL_SIZE, BROWN, euclid.Vector2( X_BAULK_D, screen_height/2))
-    yellow_ball = Ball(BALL_SIZE, YELLOW, euclid.Vector2( X_BAULK_D, 2 * Y_BAULK_D))
-    blue_ball   = Ball(BALL_SIZE, BLUE, euclid.Vector2( 1/2 * screen_width, screen_height / 2 ))
-    pink_ball   = Ball(BALL_SIZE, PINK, euclid.Vector2( 3/4 * screen_width, screen_height / 2 ))
-    black_ball  = Ball(BALL_SIZE, BLACK, euclid.Vector2( 7/8 * screen_width, screen_height / 2 ))
-    
-    
+def setUp(reference_position):
+    pass
 
 
 for i in range(num_of_balls):
@@ -180,7 +160,7 @@ for i in range(num_of_balls):
     size = random.randint(10,40)
     position = get_random_position(size)
     velocity = get_random_velocity()
-    ball = Ball(size,color,position,velocity)
+    ball = Ball(size,color,width, position,velocity)
     balls.append(ball)
 
 direction_tick = 0
