@@ -78,32 +78,6 @@ class Ball:
         if (self.position.y <= self.radius) or (self.position.y >= screen_height - self.radius):
             self.velocity.y = -self.velocity.y
 
-    def velocities_after_collision(self, ball):
-        normal = self.velocity - ball.velocity
-        normal.normalize()
-        tangent = euclid.Vector2(-normal.y, normal.x)
-
-        # tangent components of velocity before and after collision
-        v1_tangent = self.velocity.project(tangent)
-        v2_tangent = ball.velocity.project(tangent)
-
-        # initial normal components of the velocity
-        v1_normal_scalar_0 = self.velocity.dot(normal)
-        v2_normal_scalar_0 = self.velocity.dot(normal)  
-        combined_mass = ball.mass + self.mass # combined mass of both balls
-
-        # normal components of the velocity after the elastic collision
-        v1_normal_scalar = (v1_normal_scalar_0*(self.mass - ball.mass) + 2*ball.mass*v2_normal_scalar_0) / combined_mass
-        v2_normal_scalar = (v2_normal_scalar_0*(ball.mass - self.mass) + 2*self.mass*v1_normal_scalar_0) / combined_mass
-
-        # normal components after collision
-        v1_normal = v1_normal_scalar * normal
-        v2_normal = v2_normal_scalar * normal
-        
-        # update velocities
-        self.change_velocity(v1_tangent + v1_normal)
-        ball.change_velocity(v2_tangent + v2_normal)
-
     def distance_to_other(self, other):
         posA = self.position + self.velocity*dtime_s
         posB = other.position + other.velocity*dtime_s
@@ -117,12 +91,9 @@ class Ball:
         self.velocity = self.velocity.reflect(collision_vector)
         other.velocity = other.velocity.reflect(collision_vector)
 
-    def collision_with_ball(self, other, collision_type='simple'):
+    def collision_with_ball(self, other):
         if self.distance_to_other(other) <= 0:
-            if collision_type == 'elastic':
-                self.velocities_after_collision(other)
-            else:
-                self.collide(other)
+            self.collide(other)
 
 
 # Setting screen size
@@ -161,9 +132,10 @@ pink_ball   = Ball(BALL_SIZE, PINK, euclid.Vector2( 3/4 * screen_width, screen_h
 black_ball  = Ball(BALL_SIZE, BLACK, euclid.Vector2( 7/8 * screen_width, screen_height / 2 ))
 # red balls
 red_balls = [Ball(BALL_SIZE, RED, euclid.Vector2(x,y)) for x,y in get_red_ball_positions(screen_width, screen_height, BALL_SIZE, GAP)] 
-# creating a list containing all balls 
+# creating a list containing all balls
 balls = [green_ball, brown_ball, yellow_ball, blue_ball, black_ball, pink_ball, black_ball]
 balls.extend(red_balls)
+white_ball = None
 
 direction_tick = 0
 
