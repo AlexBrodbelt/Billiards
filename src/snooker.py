@@ -60,7 +60,7 @@ class Ball:
         self.radius = radius
         self.color = color
         self.width = width
-        self.mass = math.pi*self.radius**2
+        self.mass = 1 # math.pi*self.radius**2
         global id
         self.id = id
         id += 1
@@ -99,29 +99,28 @@ class Ball:
         self.velocity = self.velocity.reflect(collision_vector)
         other.velocity = other.velocity.reflect(collision_vector)
 
-    def velocities_after_collision(self, ball):
-        normal = self.position - ball.position
+    def velocities_after_collision(self, other):
+        normal = (self.position - other.position).normalize()
         if normal.magnitude() == 0:
-            print("ball in the same position", self.id, ball.id)
-        normal.normalize()
+            print("ball in the same position", self.id, other.id)
         tangent = pygame.math.Vector2(-normal.y, normal.x)
         # tangent components of velocity before and after collision
         v1_tangent = self.velocity.project(tangent)
-        v2_tangent = ball.velocity.project(tangent)
+        v2_tangent = other.velocity.project(tangent)
         # initial normal components of the velocity
         v1_normal_scalar_0 = self.velocity.dot(normal)
-        v2_normal_scalar_0 = self.velocity.dot(normal)  
-        combined_mass = ball.mass + self.mass # combined mass of both balls
+        v2_normal_scalar_0 = other.velocity.dot(normal)  
+        combined_mass = other.mass + self.mass # combined mass of both balls
         # normal components of the velocity after the elastic collision
-        v1_normal_scalar = (v1_normal_scalar_0*(self.mass - ball.mass) + 2*ball.mass*v2_normal_scalar_0) / combined_mass
-        v2_normal_scalar = (v2_normal_scalar_0*(ball.mass - self.mass) + 2*self.mass*v1_normal_scalar_0) / combined_mass
+        v1_normal_scalar = (v1_normal_scalar_0*(self.mass - other.mass) + 2*other.mass*v2_normal_scalar_0) / combined_mass
+        v2_normal_scalar = (v2_normal_scalar_0*(other.mass - self.mass) + 2*self.mass*v1_normal_scalar_0) / combined_mass
         # normal components after collision
         v1_normal = v1_normal_scalar * normal
         v2_normal = v2_normal_scalar * normal
 
         # update velocities
         self.change_velocity(v1_tangent + v1_normal)
-        ball.change_velocity(v2_tangent + v2_normal)
+        other.change_velocity(v2_tangent + v2_normal)
 
     def collision_with_ball(self, other):
         if self.distance_to_other(other) <= 0:
@@ -151,7 +150,7 @@ def set_up_background():
     pygame.draw.arc(screen, WHITE, (X_BAULK_D, Y_BAULK_D, 2*R_BAULK_D, 2*R_BAULK_D), 1/2 * math.pi, 3/2 * math.pi)
     return
 
-def reset_poisitions():
+def reset_positions():
     pass
 
 """BALL SETUP"""
@@ -163,13 +162,13 @@ blue_ball   = Ball(BALL_SIZE, BLUE, pygame.math.Vector2( 1/2 * screen_width, scr
 pink_ball   = Ball(BALL_SIZE, PINK, pygame.math.Vector2( 3/4 * screen_width, screen_height / 2 ))
 black_ball  = Ball(BALL_SIZE, BLACK, pygame.math.Vector2( 7/8 * screen_width, screen_height / 2 ))
 # red balls
-red_balls = [Ball(BALL_SIZE, RED, pygame.math.Vector2(x,y)) for x,y in get_red_ball_positions(screen_width, screen_height, BALL_SIZE, GAP)] 
+red_balls = [ Ball(BALL_SIZE, RED, pygame.math.Vector2(x + GAP ,y)) for x,y in get_red_ball_positions(screen_width, screen_height, BALL_SIZE, GAP) ] 
 # creating a list containing all balls
 balls = [green_ball, brown_ball, yellow_ball, blue_ball, pink_ball, black_ball]
 balls.extend(red_balls)
 # cue ball
-#cue_ball = Ball(BALL_SIZE, WHITE, pygame.math.Vector2(X_BAULK_D, screen_height / 2), pygame.math.Vector2(100,0))
-#balls.append(cue_ball)
+cue_ball = Ball(BALL_SIZE, WHITE, pygame.math.Vector2(X_BAULK_D, screen_height / 2), pygame.math.Vector2(100,0))
+balls.append(cue_ball)
 direction_tick = 0
 
 # Defining variables for fps and running
@@ -181,12 +180,6 @@ while run:
     dtime_s = dtime_ms / 1000
 
     direction_tick += dtime_s
-
-    #if direction_tick > 1:
-    #    direction_tick = 0
-    #    update_random_ball_velocity()
-
-
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
