@@ -1,5 +1,7 @@
 import os, sys, math, random, pygame
 from red_ball_positions import get_red_ball_positions
+from collision_detection import sweep_and_prune
+from regions import get_region
 #import pygame.mixer
 #from pygame.locals import *
 
@@ -14,7 +16,7 @@ SNOOKER_TABLE_HEIGHT = 180
 
 screen_size = screen_width, screen_height = SCALE*SNOOKER_TABLE_WIDTH, SCALE*SNOOKER_TABLE_HEIGHT
 
-id = 0
+
 
 # Color Palette
 BLACK = 0, 0, 0
@@ -33,6 +35,10 @@ R_BAULK_D = screen_height / 6 # radius of Baulk D
 X_BAULK_D = X_BAULK_LINE - R_BAULK_D
 Y_BAULK_D = screen_height / 3
 
+# table regions
+RIGHT_OF_BAULK_LINE = 1
+OUTSIDE_BAULK_D = 2 # to the left of baulk line
+INSIDE_BAULK_D = 3
 
 initial_velocity = 70
 MAX_VELOCITY = 1000
@@ -40,6 +46,8 @@ BALL_SIZE = SCALE*3
 GAP = 1
 
 colors = [BLACK, RED, GREEN, BLUE]
+
+id = 0
 
 """class Border:
     def __init__(self,left=100, top=50, width=236, height=137,color=BLACK):
@@ -55,29 +63,36 @@ colors = [BLACK, RED, GREEN, BLUE]
 
 class Ball:
     def __init__(self, radius, color, position=pygame.math.Vector2(0,0), velocity=pygame.math.Vector2(0,0), width=0):
-        self.position = position
-        self.velocity = velocity
         self.radius = radius
         self.color = color
+        self.position = position
+        self.velocity = velocity
         self.width = width
         self.mass = 1 # math.pi*self.radius**2
         global id
         self.id = id
         id += 1
         
-    
-        
-
     def move(self):
         self.position += self.velocity * dtime_s
+        #self.friction()
         self.collision_with_wall()
+        
+    def friction(self):
+        """method to take cloth-ball friction into account"""
+        friction_coefficient = 0.0001
+        threshold = 0.001
+        self.velocity //= (1 + friction_coefficient)
+        if self.velocity.magnitude_squared() <= threshold:
+            #print("ball", self.id, "is stationary")
+            self.velocity.update(0,0)
 
     def change_velocity(self, velocity):
         self.velocity = velocity
 
     def display(self):
         rx, ry = int(self.position.x), int(self.position.y)
-        pygame.draw.circle(screen,self.color, (rx, ry), self.radius,self.width)
+        pygame.draw.circle(screen, self.color, (rx, ry), self.radius, self.width)
 
     def collision_with_wall(self): # simple collision detection
         if (self.position.x <= self.radius) or (self.position.x >= screen_width - self.radius):
@@ -100,9 +115,10 @@ class Ball:
         other.velocity = other.velocity.reflect(collision_vector)
 
     def velocities_after_collision(self, other):
-        normal = (self.position - other.position).normalize()
+        normal = (self.position - other.position).normalize() # vector from center of one ball to the center of the other ball
         if normal.magnitude() == 0:
-            print("ball in the same position", self.id, other.id)
+            run = False
+            raise ValueError(f"balls {self.id} and {other.id} are in the same position")
         tangent = pygame.math.Vector2(-normal.y, normal.x)
         # tangent components of velocity before and after collision
         v1_tangent = self.velocity.project(tangent)
@@ -153,6 +169,11 @@ def set_up_background():
 def reset_positions():
     pass
 
+def set_up_cue_ball(position):
+    pass
+
+
+
 """BALL SETUP"""
 # non-red balls
 green_ball  = Ball(BALL_SIZE, GREEN, pygame.math.Vector2( X_BAULK_LINE, Y_BAULK_D))
@@ -167,9 +188,8 @@ red_balls = [ Ball(BALL_SIZE, RED, pygame.math.Vector2(x + GAP ,y)) for x,y in g
 balls = [green_ball, brown_ball, yellow_ball, blue_ball, pink_ball, black_ball]
 balls.extend(red_balls)
 # cue ball
-cue_ball = Ball(BALL_SIZE, WHITE, pygame.math.Vector2(X_BAULK_D, screen_height / 2), pygame.math.Vector2(100,0))
+cue_ball = Ball(BALL_SIZE, WHITE, pygame.math.Vector2(X_BAULK_D, screen_height / 2), pygame.math.Vector2(300,0))
 balls.append(cue_ball)
-direction_tick = 0
 
 # Defining variables for fps and running
 fps_limit = 60
@@ -179,11 +199,12 @@ while run:
     dtime_ms = clock.tick(fps_limit)
     dtime_s = dtime_ms / 1000
 
-    direction_tick += dtime_s
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        if pygame.mouse.get_pressed() == (1,0,0):
+            region  = get_region(pygame.mouse.get_pos())
+            print(f"inside region {region}") 
     
     # Clear the screen
     screen.lock() # when locked the surface can be modified
@@ -191,12 +212,18 @@ while run:
 
     #border.display()
 
-    # check for collision between balls
-    for i, ball_1 in enumerate(balls):
-        ball_1.move()
-        for ball_2 in balls[i+1:]:
-            ball_1.collision_with_ball(ball_2)
-        ball_1.display()
+    # update position of balls
+    for i, ball in enumerate(balls):
+        ball.move()
+        for other in balls[i+1:]:
+            ball.collision_with_ball(other)
+        ball.display()
+
+    # update velocity of balls
+    """for i, j in sweep_and_prune(balls):
+        ball = balls[i]
+        other = balls[j]
+        ball.collision_with_ball(other)"""
 
     screen.unlock()
     # Display everything in the screen
