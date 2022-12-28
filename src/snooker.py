@@ -2,12 +2,13 @@ import os, sys, math, random, pygame
 from red_ball_positions import get_red_ball_positions
 from collision_detection import sweep_and_prune
 from regions import get_region
+from constants import *
 #import pygame.mixer
 #from pygame.locals import *
 
 pygame.init()
 
-# Scale up/down of snooker table
+"""# Scale up/down of snooker table
 SCALE = 3
 
 # Real snooker table dimensions
@@ -45,7 +46,7 @@ MAX_VELOCITY = 1000
 BALL_SIZE = SCALE*3
 GAP = 1
 
-colors = [BLACK, RED, GREEN, BLUE]
+colors = [BLACK, RED, GREEN, BLUE]"""
 
 id = 0
 
