@@ -1,4 +1,4 @@
-import os, sys, math, random, pygame
+import os, sys, math, random, pygame, itertools
 from red_ball_positions import get_red_ball_positions
 from collision_detection import sweep_and_prune
 from regions import get_region
@@ -8,47 +8,7 @@ from constants import *
 
 pygame.init()
 
-"""# Scale up/down of snooker table
-SCALE = 3
-
-# Real snooker table dimensions
-SNOOKER_TABLE_WIDTH = 360
-SNOOKER_TABLE_HEIGHT = 180
-
-screen_size = screen_width, screen_height = SCALE*SNOOKER_TABLE_WIDTH, SCALE*SNOOKER_TABLE_HEIGHT
-
-
-
-# Color Palette
-BLACK = 0, 0, 0
-WHITE = 255, 255, 255
-YELLOW = 255, 174, 66
-RED = 255, 0, 0
-BLUE = 0, 0, 255
-GREEN = 0, 255, 0
-PINK = 255, 20, 147
-BROWN = 139, 69, 19
-BACKGROUND_GREEN = 10, 108, 3
-
-# Snooker table features
-X_BAULK_LINE = screen_width / 5 # x coordinate for Baulk Line
-R_BAULK_D = screen_height / 6 # radius of Baulk D
-X_BAULK_D = X_BAULK_LINE - R_BAULK_D
-Y_BAULK_D = screen_height / 3
-
-# table regions
-RIGHT_OF_BAULK_LINE = 1
-OUTSIDE_BAULK_D = 2 # to the left of baulk line
-INSIDE_BAULK_D = 3
-
-initial_velocity = 70
-MAX_VELOCITY = 1000
-BALL_SIZE = SCALE*3
-GAP = 1
-
-colors = [BLACK, RED, GREEN, BLUE]"""
-
-id = 0
+id = 0 # a counter that asigns an iuseful for debugging purposes 
 
 """class Border:
     def __init__(self,left=100, top=50, width=236, height=137,color=BLACK):
@@ -63,30 +23,32 @@ id = 0
         pygame.draw.rect(screen, self.color, self.rectangle,width = 1)"""
 
 class Ball:
-    def __init__(self, radius, color, position=pygame.math.Vector2(0,0), velocity=pygame.math.Vector2(0,0), width=0):
+    id_iter = itertools.count()
+    def __init__(self, radius, color, position=pygame.math.Vector2(0,0), velocity=pygame.math.Vector2(0,0), id=None, width=0):
         self.radius = radius
         self.color = color
         self.position = position
+        self.reset_position = position # useful to reset the position of the ball
         self.velocity = velocity
         self.width = width
         self.mass = 1 # math.pi*self.radius**2
-        global id
-        self.id = id
-        id += 1
+        self.id = id if id else next(Ball.id_iter)
+        print(self.id)
         
     def move(self):
         self.position += self.velocity * dtime_s
         #self.friction()
         self.collision_with_wall()
         
-    def friction(self):
+    def friction(self, dtime):
         """method to take cloth-ball friction into account"""
-        friction_coefficient = 0.0001
-        threshold = 0.001
-        self.velocity //= (1 + friction_coefficient)
-        if self.velocity.magnitude_squared() <= threshold:
-            #print("ball", self.id, "is stationary")
-            self.velocity.update(0,0)
+        friction_coefficient = 0.2 # friction
+        stopping_threshold = 5**2
+        if self.velocity.magnitude_squared() != 0:
+            self.velocity -= self.velocity * (friction_coefficient * dtime) # a * dt = (F / m) * dt = dv/dt * dt
+            if self.velocity.magnitude_squared() <= stopping_threshold: 
+                print("ball", self.id, "is stationary")
+                self.velocity.update(0,0) 
 
     def change_velocity(self, velocity):
         self.velocity = velocity
@@ -142,6 +104,9 @@ class Ball:
     def collision_with_ball(self, other):
         if self.distance_to_other(other) <= 0:
             self.velocities_after_collision(other)
+        
+class Cue_ball(Ball):
+    pass
 
 
 # Setting screen size
@@ -170,8 +135,21 @@ def set_up_background():
 def reset_positions():
     pass
 
-def set_up_cue_ball(position):
-    pass
+def set_up_cue_ball(position, in_game): # must correct ids
+    global balls
+    if len(balls) == 22: # all balls are placed
+                balls.pop()
+    pos = pygame.mouse.get_pos()
+    region  = get_region(pos)
+    if region == INSIDE_BAULK_D: # pre-visualize where the cue ball is placed
+        cue_ball = Ball(BALL_SIZE, WHITE, pos)
+        balls.append(cue_ball)
+        #state = PLAYING
+    if pygame.mouse.get_pressed() == (1,0,0): # set the cue ball to the position
+        state = PLAYING
+    
+    
+
 
 
 
@@ -189,12 +167,13 @@ red_balls = [ Ball(BALL_SIZE, RED, pygame.math.Vector2(x + GAP ,y)) for x,y in g
 balls = [green_ball, brown_ball, yellow_ball, blue_ball, pink_ball, black_ball]
 balls.extend(red_balls)
 # cue ball
-cue_ball = Ball(BALL_SIZE, WHITE, pygame.math.Vector2(X_BAULK_D, screen_height / 2), pygame.math.Vector2(300,0))
+cue_ball = Ball(BALL_SIZE, WHITE, pygame.math.Vector2(X_BAULK_D, screen_height / 2), pygame.math.Vector2(300,0), id=22)
 balls.append(cue_ball)
 
 # Defining variables for fps and running
 fps_limit = 60
 run = True
+state = PLAYING
 while run:
     # limit the framerate
     dtime_ms = clock.tick(fps_limit)
@@ -203,9 +182,20 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        if pygame.mouse.get_pressed() == (1,0,0):
-            region  = get_region(pygame.mouse.get_pos())
-            print(f"inside region {region}") 
+        
+        if state == CUE_BALL_SETUP: #  and 
+            if len(balls) == 22: # all balls are placed
+                balls.pop()
+            pos = pygame.mouse.get_pos()
+            region  = get_region(pos)
+            if region == INSIDE_BAULK_D:
+                cue_ball = Ball(BALL_SIZE, WHITE, pos)
+                balls.append(cue_ball)
+                #state = PLAYING
+            if pygame.mouse.get_pressed() == (1,0,0):
+                #cue_ball.change_velocity(pygame.math.Vector2(300,0))
+                state = PLAYING
+            #print(f"inside region {region}") 
     
     # Clear the screen
     screen.lock() # when locked the surface can be modified
@@ -216,7 +206,8 @@ while run:
     # update position of balls
     for i, ball in enumerate(balls):
         ball.move()
-        for other in balls[i+1:]:
+        ball.friction(dtime_s)
+        for other in balls[i+1:]: # update velocity of balls
             ball.collision_with_ball(other)
         ball.display()
 

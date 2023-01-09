@@ -7,6 +7,14 @@ SNOOKER_TABLE_HEIGHT = 180
 
 screen_size = screen_width, screen_height = SCALE*SNOOKER_TABLE_WIDTH, SCALE*SNOOKER_TABLE_HEIGHT
 
+# States - FSM
+CUE_BALL_SETUP = 0
+PLAYING = 1
+
+IN_GAME = False
+
+
+
 
 # Color Palette
 BLACK = 0, 0, 0
@@ -32,7 +40,7 @@ INSIDE_BAULK_D = 3
 
 initial_velocity = 70
 MAX_VELOCITY = 1000
-BALL_SIZE = SCALE*3
-GAP = 1
+BALL_SIZE = SCALE*3 # size of balls
+GAP = 1 # gap between balls
 
 colors = [BLACK, RED, GREEN, BLUE]
